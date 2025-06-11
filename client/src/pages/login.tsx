@@ -40,10 +40,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center p-4">
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center pb-2">
-          <div className="w-20 h-20 bg-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+          <div className="w-20 h-20 bg-blue-500 rounded-full mx-auto mb-4 flex items-center justify-center">
             <Factory className="text-white text-2xl w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold text-hpcl-dark">HPCL</h1>
@@ -62,7 +62,7 @@ export default function Login() {
                 placeholder="Enter username"
                 value={credentials.username}
                 onChange={(e) => setCredentials(prev => ({ ...prev, username: e.target.value }))}
-                className="focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
@@ -76,13 +76,13 @@ export default function Login() {
                 placeholder="Enter password"
                 value={credentials.password}
                 onChange={(e) => setCredentials(prev => ({ ...prev, password: e.target.value }))}
-                className="focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                className="focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 required
               />
             </div>
             <Button
               type="submit"
-              className="w-full bg-orange-500 text-white hover:bg-orange-600 transition-colors duration-200"
+              className="w-full bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200"
               disabled={loginMutation.isPending}
             >
               {loginMutation.isPending ? "Logging in..." : "Login"}
