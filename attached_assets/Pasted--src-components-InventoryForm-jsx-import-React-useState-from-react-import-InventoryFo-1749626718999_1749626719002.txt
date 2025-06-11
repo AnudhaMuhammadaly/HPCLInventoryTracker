@@ -1,0 +1,88 @@
+// src/components/InventoryForm.jsx
+import React, { useState } from 'react';
+import './InventoryForm.css';
+
+
+const InventoryForm = () => {
+  const [formData, setFormData] = useState({
+    date: '',
+    vendor: '',
+    itemName: '',
+    matSpec: '',
+    quantity: '',
+    reorderLevel: ''
+  });
+
+  const handleChange = (e) => {
+    const { id, value } = e.target;
+    setFormData({ ...formData, [id]: value });
+  };
+
+ const handleSubmit = (type) => {
+  let { date, vendor, itemName, matSpec, quantity, reorderLevel } = formData;
+
+  // Convert itemName and matSpec to uppercase
+  itemName = itemName.trim().toUpperCase();
+  matSpec = matSpec.trim().toUpperCase();
+
+  if (!date || !vendor.trim() || !itemName || !matSpec || isNaN(quantity) || quantity <= 0 || isNaN(reorderLevel) || reorderLevel < 0) {
+    alert("Please fill all fields correctly.");
+    return;
+  }
+
+  let transactions = JSON.parse(localStorage.getItem("inventoryTransactions")) || [];
+  transactions.push({
+    date,
+    vendor,
+    item: itemName,
+    spec: matSpec,
+    quantity: parseInt(quantity),
+    reorderLevel: parseInt(reorderLevel),
+    type // IN or OUT
+  });
+
+  localStorage.setItem("inventoryTransactions", JSON.stringify(transactions));
+  console.log("Saved transactions:", transactions);
+  alert(`${type} recorded successfully!`);
+
+  setFormData({ date: '', vendor: '', itemName: '', matSpec: '', quantity: '', reorderLevel: '' });
+};
+
+
+  return (
+    <div className="container">
+      
+      <h1>MAINTENANCE STORE INVENTORY</h1>
+      <h2>HPCL KOCHI LPG PLANT</h2>
+
+      <br /> 
+
+      <label>Date:</label>
+      <input type="date" id="date" value={formData.date} onChange={handleChange} />
+
+      <label>Vendor Name:</label>
+      <input type="text" id="vendor" placeholder="Enter vendor name" value={formData.vendor} onChange={handleChange} />
+
+      <label>Item Name:</label>
+      <input type="text" id="itemName" placeholder="Enter item name" value={formData.itemName} onChange={handleChange} />
+
+      <label>Material Specification:</label>
+      <input type="text" id="matSpec" placeholder="Enter specification" value={formData.matSpec} onChange={handleChange} />
+
+      <label>Quantity:</label>
+      <input type="number" id="quantity" value={formData.quantity} onChange={handleChange} />
+
+      <label>Reorder Level:</label>
+      <input type="number" id="reorderLevel" placeholder="Enter reorder level" value={formData.reorderLevel} onChange={handleChange} />
+
+      <div className="buttons">
+        <button className="in-btn" onClick={() => handleSubmit('IN')}>IN</button>
+        <button className="out-btn" onClick={() => handleSubmit('OUT')}>OUT</button>
+      </div>
+
+      <button className="summary-btn" onClick={() => window.location.href='/summary'}>View Summary</button>
+    </div>
+  );
+};
+
+export default InventoryForm;
