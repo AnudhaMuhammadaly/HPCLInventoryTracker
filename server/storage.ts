@@ -2,8 +2,12 @@ import {
   type InsertInventoryTransaction, 
   type InventoryTransaction,
   type InsertVendor,
-  type Vendor 
+  type Vendor,
+  inventoryTransactions,
+  vendors
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // Inventory transactions
@@ -18,94 +22,58 @@ export interface IStorage {
   deleteVendor(id: number): Promise<boolean>;
 }
 
-export class MemStorage implements IStorage {
-  private inventoryTransactions: Map<number, InventoryTransaction>;
-  private vendors: Map<number, Vendor>;
-  private currentTransactionId: number;
-  private currentVendorId: number;
-
-  constructor() {
-    this.inventoryTransactions = new Map();
-    this.vendors = new Map();
-    this.currentTransactionId = 1;
-    this.currentVendorId = 1;
-
-    // Initialize with some default vendors
-    this.initializeDefaultVendors();
-  }
-
-  private initializeDefaultVendors() {
-    const defaultVendors = [
-      { name: 'Larsen & Toubro', address: 'Mumbai, Maharashtra', phone: '+91 22 6752 5656', email: 'contact@larsentoubro.com' },
-      { name: 'Tata Steel', address: 'Jamshedpur, Jharkhand', phone: '+91 657 665 4444', email: 'info@tatasteel.com' },
-      { name: 'BHEL', address: 'New Delhi', phone: '+91 11 2610 6151', email: 'contact@bhel.in' },
-      { name: 'Thermax', address: 'Pune, Maharashtra', phone: '+91 20 6601 2345', email: 'info@thermaxglobal.com' }
-    ];
-
-    defaultVendors.forEach(vendor => {
-      const id = this.currentVendorId++;
-      const vendorWithId: Vendor = {
-        ...vendor,
-        id,
-        createdAt: new Date()
-      };
-      this.vendors.set(id, vendorWithId);
-    });
-  }
-
-  // Inventory transactions
+export class DatabaseStorage implements IStorage {
   async getInventoryTransactions(): Promise<InventoryTransaction[]> {
-    return Array.from(this.inventoryTransactions.values());
+    return await db.select().from(inventoryTransactions);
   }
 
   async createInventoryTransaction(insertTransaction: InsertInventoryTransaction): Promise<InventoryTransaction> {
-    const id = this.currentTransactionId++;
-    const transaction: InventoryTransaction = {
-      ...insertTransaction,
-      id,
-      createdAt: new Date()
-    };
-    this.inventoryTransactions.set(id, transaction);
+    const [transaction] = await db
+      .insert(inventoryTransactions)
+      .values(insertTransaction)
+      .returning();
     return transaction;
   }
 
   async updateReorderLevel(item: string, spec: string, reorderLevel: number): Promise<void> {
-    // Update all transactions with this item/spec combination
-    for (const transaction of this.inventoryTransactions.values()) {
-      if (transaction.item === item && transaction.spec === spec) {
-        transaction.reorderLevel = reorderLevel;
-      }
-    }
+    await db
+      .update(inventoryTransactions)
+      .set({ reorderLevel })
+      .where(
+        and(
+          eq(inventoryTransactions.item, item),
+          eq(inventoryTransactions.spec, spec)
+        )
+      );
   }
 
-  // Vendors
   async getVendors(): Promise<Vendor[]> {
-    return Array.from(this.vendors.values());
+    return await db.select().from(vendors);
   }
 
   async createVendor(insertVendor: InsertVendor): Promise<Vendor> {
-    const id = this.currentVendorId++;
-    const vendor: Vendor = {
-      ...insertVendor,
-      id,
-      createdAt: new Date()
-    };
-    this.vendors.set(id, vendor);
+    const [vendor] = await db
+      .insert(vendors)
+      .values(insertVendor)
+      .returning();
     return vendor;
   }
 
   async updateVendor(id: number, vendorUpdate: Partial<InsertVendor>): Promise<Vendor | undefined> {
-    const vendor = this.vendors.get(id);
-    if (!vendor) return undefined;
-
-    const updatedVendor = { ...vendor, ...vendorUpdate };
-    this.vendors.set(id, updatedVendor);
-    return updatedVendor;
+    const [vendor] = await db
+      .update(vendors)
+      .set(vendorUpdate)
+      .where(eq(vendors.id, id))
+      .returning();
+    return vendor || undefined;
   }
 
   async deleteVendor(id: number): Promise<boolean> {
-    return this.vendors.delete(id);
+    const result = await db
+      .delete(vendors)
+      .where(eq(vendors.id, id));
+    return (result.rowCount || 0) > 0;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
