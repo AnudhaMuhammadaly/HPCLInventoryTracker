@@ -10,7 +10,7 @@ import type { InventoryTransaction } from "@shared/schema";
 
 export default function DetailedInventory() {
   const [searchFilter, setSearchFilter] = useState("");
-  const [typeFilter, setTypeFilter] = useState("");
+  const [typeFilter, setTypeFilter] = useState("ALL");
 
   const { data: transactions = [], isLoading } = useQuery<InventoryTransaction[]>({
     queryKey: ['/api/inventory/transactions']
@@ -32,7 +32,7 @@ export default function DetailedInventory() {
       transaction.vendor.toLowerCase().includes(searchFilter.toLowerCase()) ||
       transaction.spec.toLowerCase().includes(searchFilter.toLowerCase());
     
-    const matchesType = typeFilter === "" || transaction.type === typeFilter;
+    const matchesType = typeFilter === "ALL" || transaction.type === typeFilter;
     
     return matchesSearch && matchesType;
   });
@@ -56,7 +56,7 @@ export default function DetailedInventory() {
                 <SelectValue placeholder="All Transactions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Transactions</SelectItem>
+                <SelectItem value="ALL">All Transactions</SelectItem>
                 <SelectItem value="IN">IN Only</SelectItem>
                 <SelectItem value="OUT">OUT Only</SelectItem>
               </SelectContent>
